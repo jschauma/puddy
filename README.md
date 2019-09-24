@@ -7,6 +7,10 @@ Please see the [manual
 page](https://github.com/jschauma/puddy/blob/master/doc/puddy.1.txt)
 for details.
 
+`puddy(1)` has a web interface at
+https://www.netmeister.org/puddy/.  That's right,
+puddy as a service. High-five!
+
 ## Requirements
 
 `puddy(1)` is old-school.  You'll need to have Perl
