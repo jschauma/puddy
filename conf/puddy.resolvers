@@ -1,0 +1,138 @@
+# This file contains a list of public DNS servers
+# suitable for being fed to puddy(1).
+#
+# The format of the file is document in the manual
+# page, but in a nutshell, it's
+# ip-address [some-organization-identifier]
+198.101.242.72	Alternate DNS
+23.253.163.53	Alternate DNS
+
+178.21.23.150	BlockAid Public DNS (or PeerDNS)
+205.204.88.60	BlockAid Public DNS (or PeerDNS)
+
+2001:67c:28a4::			Censurfridns
+2002:d596:2a92:1:71:53::	Censurfridns
+89.233.43.71			Censurfridns
+91.239.100.100			Censurfridns
+
+212.82.225.7	ClaraNet
+212.82.226.212	ClaraNet
+
+1.0.0.1			Cloudflare
+1.1.1.1			Cloudflare
+2606:4700:4700::1001	Cloudflare
+2606:4700:4700::1111	Cloudflare
+
+8.20.247.20	Comodo Secure DNS
+8.26.56.26	Comodo Secure DNS
+
+2001:1608:10:25::1c04:b12f	DNS.Watch
+2001:1608:10:25::9249:d69b	DNS.Watch
+
+84.200.69.80	DNS.Watch
+84.200.70.40	DNS.Watch
+
+104.236.210.29	DNSReactor
+45.55.155.25	DNSReactor
+
+216.146.35.35	Dyn
+216.146.36.36	Dyn
+
+2001:910:800::12	FDN
+80.67.169.12		FDN
+
+85.214.73.63	FoeBud
+
+213.187.11.62	FoolDNS
+87.118.111.215	FoolDNS
+
+37.235.1.174	FreeDNS
+37.235.1.177	FreeDNS
+
+80.80.80.80	Freenom World
+80.80.81.81	Freenom World
+
+62.141.58.13	German Privacy Foundation e.V.
+85.25.251.254	German Privacy Foundation e.V.
+87.118.100.175	German Privacy Foundation e.V.
+94.75.228.29	German Privacy Foundation e.V.
+
+2001:4860:4860::8844	Google Public DNS
+2001:4860:4860::8888	Google Public DNS
+8.8.4.4			Google Public DNS
+8.8.8.8			Google Public DNS
+
+209.88.198.133	GreenTeamDNS
+81.218.119.11	GreenTeamDNS
+
+2001:470:20::2	Hurricane Electric
+74.82.42.42	Hurricane Electric
+
+209.244.0.3	Level3
+209.244.0.4	Level3
+
+156.154.70.1	Neustar DNS Advantage
+156.154.71.1	Neustar DNS Advantage
+
+185.82.22.133	New Nations
+5.45.96.220	New Nations
+
+198.153.192.1	Norton DNS
+198.153.194.1	Norton DNS
+
+208.67.220.220	OpenDNS
+208.67.222.222	OpenDNS
+2620:0:ccc::2	OpenDNS
+2620:0:ccd::2	OpenDNS
+
+119.31.230.42				OpenNIC
+200.252.98.162				OpenNIC
+2001:470:1f07:38b::1			OpenNIC
+2001:470:1f10:c6::2001			OpenNIC
+2001:470:8388:2:20e:2eff:fe63:d4a9	OpenNIC
+203.167.220.153				OpenNIC
+207.192.69.155				OpenNIC
+216.87.84.211				OpenNIC
+217.79.186.148				OpenNIC
+58.6.115.42				OpenNIC
+58.6.115.43				OpenNIC
+66.244.95.20				OpenNIC
+72.14.189.120				OpenNIC
+78.159.101.37				OpenNIC
+81.89.98.6				OpenNIC
+82.229.244.191				OpenNIC
+
+194.145.226.26	PowerNS
+77.220.232.44	PowerNS
+
+2620:fe::fe	Quad9
+9.9.9.9		Quad9
+
+195.46.39.39	SafeDNS
+195.46.39.40	SafeDNS
+
+193.58.251.251	SkyDNS
+
+208.76.50.50	SmartViper Public DNS
+208.76.51.51	SmartViper Public DNS
+
+78.46.89.147	ValiDOM
+88.198.75.145	ValiDOM
+
+2620:74:1b::1:1	Verisign
+2620:74:1c::2:2	Verisign
+64.6.64.6	Verisign
+64.6.65.6	Verisign
+
+2001:1620:2078:136::	Xiala.net
+2001:1620:2078:137::	Xiala.net
+77.109.148.136		Xiala.net
+77.109.148.137		Xiala.net
+
+2a02:6b8:0:1::feed:bad	Yandex.DNS
+2a02:6b8::feed:bad	Yandex.DNS
+77.88.8.2		Yandex.DNS
+77.88.8.88		Yandex.DNS
+
+109.69.8.51		puntCAT
+2a00:1508:0:4::9	puntCAT

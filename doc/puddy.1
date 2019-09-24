@@ -1,0 +1,394 @@
+.Dd September 23, 2019
+.Dt puddy 1
+.Os
+.Sh NAME
+.Nm puddy
+.Nd public DNS data yielder
+.Sh SYNOPSIS
+.Nm
+.Op Fl 146Vdhjpv
+.Op Fl c Ar country
+.Op Fl f Ar file
+.Op Fl n Ar num
+.Op Fl r Ar resolver
+.Ar query
+.Op Ar type Ar ...
+.Sh DESCRIPTION
+The
+.Nm
+tool allows you to query a number of different
+resolvers to compare whether results are uniform
+across the internet.
+.Sh OPTIONS
+The following options are supported by
+.Nm :
+.Bl -tag -width a_resolver_
+.It Fl 1
+Only use a single resolver from one and the same
+organization.
+This option cannot be combined with the
+.Fl p
+flag.
+See Section PUBLIC RESOLVERS for details.
+.It Fl 4
+Only query IPv4 resolvers.
+.It Fl 6
+Only query IPv6 resolvers.
+.It Fl V
+Print version number and exit.
+.It Fl c Ar country
+Try to use the EDNS Client Subnet (ECS) extension to
+elicit a response from the DNS server as if the client
+was located in the given country.
+.Pp
+The argument
+.Ar country
+can be a country code or the name of a country.
+.Pp
+See Section COUNTRY IMITATION for details.
+.It Fl d
+Use DNS-over-HTTPS.
+This option only works with a subset of the known
+public resolvers and thus conflicts with e.g., the
+.Fl f
+and
+.Fl p
+flags.
+.It Fl f Ar file
+Read the list of resolvers to query from this file.
+This option conflicts with the
+.Fl p
+flag.
+See Section FILES for details.
+.It Fl h
+Display help and exit.
+.It Fl j
+Print output in json format.
+.It Fl n Ar num
+Only query at most this many resolvers.
+.It Fl p
+Query all known public DNS resolvers.
+This option conflicts with the
+.Fl f
+flag.
+See Section PUBLIC RESOLVERS for details.
+.It Fl r Ar resolver
+Add the given resolver to the list of resolvers to
+query.
+Can be specified multiple times.
+.It Fl v
+Be verbose.
+Can be specified multiple times.
+.El
+.Sh DETAILS
+Sometimes it can be useful to check whether a given
+hostname or record resolves to the same value in
+different places on the internet, so you go and ask
+the magic 8.8.8.8 ball.
+But perhaps other resolvers elsewhere have different
+results?
+Manually querying multiple resolvers is laborsome, do
+instead
+.Nm
+saves you some typing by performing these lookups in
+succession for you.
+.Pp
+By default,
+.Nm
+will query resolvers for A, AAAA, and CNAME records,
+similar to the
+.Xr host 1
+command.
+.Sh PUBLIC RESOLVERS
+If the
+.Fl p
+flag is given,
+.Nm
+will retrieve the list of known public DNS resolvers
+from https://public-dns.info/nameservers.txt and query
+each one.
+.Pp
+Otherwise, if the
+.Fl f
+flag is given,
+.Nm
+will read the list of resolvers to query from the
+specified file.
+.Pp
+Many organizations offer public DNS services on
+multiple IP addresses; if the list of resolvers to use
+contains multiple IP address for the same
+organization, and you only want one of those
+servers, specify the
+.Fl 1
+(numeric one) flag.
+.Nm
+will then pick only of the IPs for each organization
+from the input set.
+Note: If an organization's resolvers are reachable via both
+IPv4 and IPv6 addresses, then
+.Nm
+will prefer the IPv6 address.
+.Pp
+If the
+.Fl d
+flag is specified,
+.Nm
+will query a short list of hardcoded public resolvers
+known to support DNS-over-HTTPS with results returned
+in JSON format:
+.Bl -tag -width 4n -offset indent -compact
+.It Cloudflare
+.It DNS.SB
+.It Google
+.It Netweaver
+.It Quad9
+.It SecureDNS.eu
+.It doh.li
+.El
+.Pp
+If neither the
+.Fl d ,
+.Fl f ,
+or
+.Fl p
+flag is specified,
+.Nm
+will only query a short list of hardocded, popular
+public resolvers, which consists of:
+.Bl -tag -width 4n -offset indent -compact
+.It Cloudflare
+.It Google
+.It Hurricane Electric
+.It OpenDNS
+.It Quad9
+.El
+.Pp
+In addition,
+.Nm
+will also query the resolvers found in
+/etc/resolv.conf.
+.Pp
+Finally, if the
+.Fl n
+flag is specified, then at most this many resolvers
+will be queried; the list is randomized before the
+selection of resolvers to query is made.
+.Sh FILES
+.Nm
+may read a list of public resolvers to query from a
+file provided via the
+.Fl f
+flag.
+Each line in the file is expected to consist of an IP
+address and an optional comment or identifier.
+Leading and trailing whitespace as well as empty lines
+and anything following the '#' character are ignored.
+.Pp
+An example puddy.resolvers file might look like so:
+.Bd -literal -offset indent
+# puddy.resolvers file
+216.146.35.35 Dyn
+2001:470:1f10:c6::2001 OpenNIC
+10.0.0.1 My Private Resolver # not /etc/resolv.conf!
+.Ed
+.Pp
+.Nm
+may have come with a list of public resolvers in
+/usr/local/share/puddy.resolvers.
+.Sh COUNTRY IMITATION
+Sometimes it is useful to be able to see if different
+resolvers might give different responses based on
+where the client is located.
+.Nm
+supports the
+.Fl c Ar country
+option to attempt to elicit a response from the DNS
+server as if the client was in the given location.
+This is done through the use of the EDNS Client Subnet
+extension (ECS, see RFC7871).
+.Pp
+Note: at this time,
+.Nm
+only supports this option when performing queries
+using DNS over HTTPS (i.e., in combination with the
+.Fl d
+option).
+.Pp
+When specified,
+.Nm
+will try to look up a suitable netblock for the given
+country via the site http://services.ce3c.be/ciprg/,
+then set the ECS option.
+.Pp
+If you wish to disable the use of the ECS extension
+altogether, then you can pass 'none' as an argument to
+the
+.Fl c
+flag, yielding a netblock of 0.0.0.0/0.
+.Pp
+Note: not all DoH providers honor this option, but
+.Nm
+has no way of telling the difference.
+In addition, even for those resolvers that do support
+it, there is no guarantee that the result returned
+does in fact reflect what would be returned to a
+client query actually originating from that netblock.
+.Sh EXAMPLES
+The following examples illustrate common usage of this tool.
+.Pp
+To look up the IP addresses for www.yahoo.com on the
+short list of public resolvers, limiting to one query
+per organization:
+.Bd -literal -offset indent
+$ puddy -1 www.yahoo.com
+2001:470:20::2 (Hurricane Electric)
+	A (20): 72.30.35.10
+	A (20): 72.30.35.9
+	AAAA (56): 2001:4998:58:1836::11
+	AAAA (56): 2001:4998:58:1836::10
+	CNAME (1759): atsv2-fp-shed.wg1.b.yahoo.com.
+2001:4860:4860::8888 (Google)
+	A (15): 98.138.219.231
+	A (15): 72.30.35.9
+	A (15): 72.30.35.10
+	A (15): 98.138.219.232
+	AAAA (45): 2001:4998:44:41d::4
+	AAAA (45): 2001:4998:44:41d::3
+	AAAA (45): 2001:4998:58:1836::11
+	AAAA (45): 2001:4998:58:1836::10
+	CNAME (77): atsv2-fp-shed.wg1.b.yahoo.com.
+2606:4700:4700::1001 (Cloudflare)
+	A (38): 72.30.35.10
+	A (38): 72.30.35.9
+	AAAA (33): 2001:4998:58:1836::10
+	AAAA (33): 2001:4998:58:1836::11
+	CNAME (15): atsv2-fp-shed.wg1.b.yahoo.com.
+2620:0:ccc::2 (OpenDNS)
+	A (18): 72.30.35.9
+	A (18): 72.30.35.10
+	AAAA (45): 2001:4998:58:1836::10
+	AAAA (45): 2001:4998:58:1836::11
+	CNAME (1531): atsv2-fp-shed.wg1.b.yahoo.com.
+2620:fe::fe (Quad9)
+	A (15): 72.30.35.9
+	A (15): 72.30.35.10
+	AAAA (56): 2001:4998:58:1836::11
+	AAAA (56): 2001:4998:58:1836::10
+	CNAME (772): atsv2-fp-shed.wg1.b.yahoo.com.
+172.131.44.74 (/etc/resolv.conf)
+	A (46): 74.6.143.8
+	AAAA (51): 2001:4998:58:207::1000
+	CNAME (1800): atsv2-fp-shed.wg1.b.yahoo.com.
+.Ed
+.Pp
+To only query at most 2 IPv6 resolvers from the public list of
+public resolvers for NS records, one of which does not
+respond in time:
+.Bd -literal -offset indent
+$ puddy -6 -n 2 -p netmeister.org NS
+2610:a1:1019::31
+        NS: timed out
+2610:a1:1019::32
+        NS (10799): ns-143-b.gandi.net.
+        NS (10799): ns-179-c.gandi.net.
+        NS (10799): ns-181-a.gandi.net.
+.Ed
+.Pp
+To query 3 DoH providers:
+.Bd -literal -offset indent
+$ puddy -n 3 -d  _443._tcp.mta-sts.netmeister.org TLSA
+DNS.SB (https://doh.dns.sb/dns-query?)
+        TLSA (3600): 3 1 1 905254acd0785b76b76b42da2c419d065b2442427883f133c9305f2010ae6397
+Google (https://dns.google/resolve?)
+        TLSA (3599): 3 1 1 905254acd0785b76b76b42da2c419d065b2442427883f133c9305f2010ae6397
+Quad9 (https://9.9.9.9:5053/dns-query?)
+        TLSA (3600): 3 1 1 905254acd0785b76b76b42da2c419d065b2442427883f133c9305f2010ae6397
+.Ed
+.Pp
+To get DoH results with an EDNS Client Subnet set to a
+netblock from China:
+.Bd -literal -offset indent
+$ puddy -d -c cn www.google.cn
+Cloudflare (https://cloudflare-dns.com/dns-query?)
+        A (105): 172.217.11.3
+        AAAA (55): 2607:f8b0:4006:812::2003
+DNS.SB (https://doh.dns.sb/dns-query?) (ECS 45.126.116.0/22)
+        A (300): 203.208.39.207
+        A (300): 203.208.39.216
+        A (300): 203.208.39.223
+        A (300): 203.208.39.215
+Google (https://dns.google/resolve?) (ECS 45.126.116.0/22)
+        A (299): 203.208.39.223
+        A (299): 203.208.39.207
+        A (299): 203.208.39.215
+        A (299): 203.208.39.216
+Netweaver (https://doh.netweaver.uk/dns-query?)
+        A (300): 172.217.169.3
+        AAAA (300): 2a00:1450:4009:807::2003
+Quad9 (https://9.9.9.9:5053/dns-query?)
+        A (300): 172.217.7.3
+        AAAA (300): 2607:f8b0:4006:801::2003
+SecureDNS.eu (https://doh.securedns.eu/dns-query?) (ECS 45.126.116.0/0)
+        A (900): 172.217.22.99
+        AAAA (900): 2a00:1450:4001:81d::2003
+doh.li (https://doh.li/dns-query?) (ECS 45.126.116.0/22)
+        A (300): 203.208.39.216
+        A (300): 203.208.39.215
+        A (300): 203.208.39.207
+        A (300): 203.208.39.223
+.Ed
+.Pp
+To get the results from the resolvers specified in the
+file /usr/local/share/puddy.resolvers and generate
+output in json format:
+.Bd -literal -offset indent
+$ puddy -j -f /usr/local/share/puddy.resolvers whocybered.me txt
+{
+   "results" : {
+      "209.244.0.3" : {
+         "TXT" : {
+            "status" : "NOERROR",
+            "rrs" : [
+               {
+                  "value" : "\\"Attribution is hard. Cyber doubly so. When in doubt, APT.\\"",
+                  "ttl" : 10795
+               }
+            ]
+         },
+         "comment" : "/tmp/f"
+      },
+      "2620:74:1b::1:1" : {
+         "TXT" : {
+            "status" : "NOERROR",
+            "rrs" : [
+               {
+                  "ttl" : 10794,
+                  "value" : "\\"Attribution is hard. Cyber doubly so. When in doubt, APT.\\""
+               }
+            ]
+         },
+         "comment" : "/tmp/f"
+      }
+   },
+   "query" : "whocybered.me"
+}
+.Ed
+.Sh EXIT STATUS
+.Ex -std 
+.Sh NOTES
+Feels like an Arby's night.
+.Sh SEE ALSO
+.Xr dig 1 ,
+.Xr host 1 ,
+.Xr nslookup 1
+.Pp
+RFC7871
+.Sh HISTORY
+.Nm
+was originally written by
+.An Jan Schaumann
+.Aq jschauma@netmeister.org
+in September 2019.
+.Sh BUGS
+Please file bugs and feature requests by emailing the author.
