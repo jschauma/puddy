@@ -293,7 +293,7 @@ sub runPuddy() {
 	if ($CGI->param('lookup') eq "doh") {
 		push(@CMD, "-d");
 		my $c = $CGI->param('country');
-		if ($c && ($c =~ m/^([a-z;:()']+)$/i)) {
+		if ($c && ($c ne "default") && ($c =~ m/^([a-z;:()']+)$/i)) {
 			push(@CMD, "-c", $1);
 		}
 	} else {
@@ -336,7 +336,7 @@ sub runPuddy() {
 			print "<b>Name:</b> $name<br>\n";
 			print "<b>Type:</b> " . join(", ", @types) . "<br>\n";
 			print "<b>Lookup type:</b> " . $CGI->param('lookup') . "<br>\n";
-			if ($CGI->param('country')) {
+			if ($CGI->param('country') && $CGI->param('country') ne "default") {
 				print "<b>ECS Country Netblock:</b> " . $CGI->param('country') ."<br>\n";
 			}
 			print "<div id=\"waiting\">Query sent, sit tight...<br>\n";
@@ -405,7 +405,7 @@ honor it and return results for that given ECS.
 Finally, if HTML isn't your thing, you can also
 request JSON output, which then lends itself to
 querying this service from the command-line via e.g.,
-<blockquote><tt>curl "https://www.netmeister.org/puddy/index.cgi?name=wikipedia.org&type=A&format=json&lookup=doh&country=CHINA" | python -m json.tool</tt></blockquote>
+<blockquote><tt>curl "https://www.netmeister.org/puddy/?name=wikipedia.org&type=A&format=json&lookup=doh&country=CHINA" | python -m json.tool</tt></blockquote>
   </p>
   <hr width="75%">
 EOD
@@ -447,7 +447,8 @@ sub printForm() {
       <tr>
         <td>ECS Country Netblock (implies DoH):</td>
         <td><select name="country" onchange="if (this.selectedIndex) document.getElementById('doh').checked = true;">
-            <option value="none">
+            <option value="default">default (US)
+            <option value="none">none
 EOD
 ;
 	foreach my $c (@COUNTRIES) {
