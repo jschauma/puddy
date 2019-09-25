@@ -74,24 +74,24 @@ my %DOH = (
 
 my %RESOLVERS = (
 			"ipv4" => {
-				"1.0.0.1" => "Cloudflare",
-				"1.1.1.1" => "Cloudflare",
-				"8.8.4.4" => "Google",
-				"8.8.8.8" => "Google",
-				"9.9.9.9" => "Quad9",
-				"74.82.42.42" => "Hurricane Electric",
-				"208.67.220.220" => "OpenDNS",
-				"208.67.222.222" => "OpenDNS",
+				"1.0.0.1"		=> "Cloudflare",
+				"1.1.1.1"		=> "Cloudflare",
+				"8.8.4.4"		=> "Google",
+				"8.8.8.8"		=> "Google",
+				"9.9.9.9"		=> "Quad9",
+				"74.82.42.42"		=> "Hurricane Electric",
+				"208.67.220.220"	=> "OpenDNS",
+				"208.67.222.222"	=> "OpenDNS",
 				},
 			"ipv6" => {
-				"2001:470:20::2" => "Hurricane Electric",
-				"2001:4860:4860::8844" => "Google",
-				"2001:4860:4860::8888" => "Google",
-				"2606:4700:4700::1001" => "Cloudflare",
-				"2606:4700:4700::1111" => "Cloudflare",
-				"2620:0:ccc::2" => "OpenDNS",
-				"2620:0:ccd::2" => "OpenDNS",
-				"2620:fe::fe" => "Quad9",
+				"2001:470:20::2"	=> "Hurricane Electric",
+				"2001:4860:4860::8844"	=> "Google",
+				"2001:4860:4860::8888"	=> "Google",
+				"2606:4700:4700::1001"	=> "Cloudflare",
+				"2606:4700:4700::1111"	=> "Cloudflare",
+				"2620:0:ccc::2"		=> "OpenDNS",
+				"2620:0:ccd::2"		=> "OpenDNS",
+				"2620:fe::fe"		=> "Quad9",
 				},
 		);
 
@@ -133,7 +133,6 @@ sub error($;$) {
 }
 
 sub getCountryNetblocks() {
-
 	my $c = lc($OPTS{'country'});
 	# Catch a few common cases, even if some of those
 	# are not correct or may infuriate people.
@@ -173,7 +172,7 @@ sub getCountryNetblocks() {
 
 	my @country_netblocks;
 	my @cmd = ( "curl", "-s", $url);
-	open(my $out, "-|", @cmd) or error("Unable to open pipe to '".
+	open(my $out, "-|", @cmd) or error("Unable to open pipe from '".
 						join(" ", @cmd) . "': $!", EXIT_FAILURE);
 	foreach my $line (<$out>) {
 		if ($line =~ m/.*address="(.*)" action.*mask="(.*)" comment="(.*)"/) {
@@ -620,7 +619,7 @@ sub queryDOH($$$) {
 			"-H", "Accept: application/dns-json",
 			"$url");
 
-	open(my $out, "-|", @cmd) or error("Unable to open pipe to '".
+	open(my $out, "-|", @cmd) or error("Unable to open pipe from '".
 						join(" ", @cmd) . "': $!", EXIT_FAILURE);
 	my $json = JSON->new->allow_nonref;
 	my $data = <$out>;
