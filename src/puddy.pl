@@ -22,6 +22,7 @@ use Net::DNS;
 use Net::DNS::Parameters qw(typebyval rcodebyval);
 use Net::IP;
 use Net::Netmask;
+use Parallel::ForkManager;
 use Socket qw(PF_INET PF_INET6 inet_ntoa inet_pton);
 use URI::Escape;
 
@@ -48,12 +49,15 @@ use constant EXIT_SUCCESS => 0;
 use constant PUBLIC_URL => "https://public-dns.info/nameservers.txt";
 use constant CIPGR_URL => "http://services.ce3c.be/ciprg/";
 
-use constant VERSION => 1.0;
+use constant VERSION => 1.1;
 
 ###
 ### Globals
 ###
 
+# We start with a small default; we may bump this up
+# based on 'ulimit -n' below.
+my $CONCURRENCY = 8;
 my %OPTS;
 my $PROGNAME = basename($0);
 my $RETVAL = 0;
@@ -263,6 +267,15 @@ sub init() {
 	if ($OPTS{'country'} && !$OPTS{'doh'}) {
 		error("'-c' can only be used in combination with '-d'.", EXIT_FAILURE);
 		# NOTREACHED
+	}
+
+	my $ulimit = `/bin/sh -c "ulimit -n"`;
+	chomp($ulimit);
+	if (($ulimit ne "unlimited") && ($ulimit > $CONCURRENCY)) {
+		my $u = $ulimit / 2;
+		if ($u > $CONCURRENCY) {
+			$CONCURRENCY = $u;
+		}
 	}
 }
 
@@ -592,12 +605,10 @@ sub printResultsPlain() {
 
 sub queryDOH($$$) {
 	my ($url, $query, $type) = @_;
+	my %dohResults;
 
 	my $provider = $DOH{$url};
-	# We overloaded the URL / org values for DoH
-	# providers, so clean house.
-	delete($RESULTS{"results"}{$url});
-	$RESULTS{"results"}{$provider}{"comment"} = "$url";
+	$dohResults{"comment"} = "$url";
 
 	verbose("Querying $provider for '$query' ($type) via DoH...", 4);
 	$url .= "name=" . uri_escape($query) . "&type=" . uri_escape($type);
@@ -629,7 +640,7 @@ sub queryDOH($$$) {
 	};
 	if ($@) {
 		# E.g., Google DNS returns a 500 error on invalid query type.
-		$RESULTS{"results"}{$provider}{$type}{"status"} = "Unable to query '$url'.";
+		$dohResults{"status"} = "Unable to query '$url'.";
 		return;
 
 	};
@@ -653,14 +664,14 @@ sub queryDOH($$$) {
 		my $t = $a{type};
 		my $foundType = typebyval($t);
 		if (!$foundType) {
-			$RESULTS{"results"}{$provider}{$type}{"status"} = "Unknown RR type '$t'.";
+			$dohResults{"status"} = "Unknown RR type '$t'.";
 			next;
 		} else {
 			my $status = $result->{"Status"};
-			$RESULTS{"results"}{$provider}{$type}{"status"} = rcodebyval($status);
+			$dohResults{"status"} = rcodebyval($status);
 
 			if ($result->{"edns_client_subnet"}) {
-				$RESULTS{"results"}{$provider}{"edns_client_subnet"} = $result->{"edns_client_subnet"};
+				$dohResults{"edns_client_subnet"} = $result->{"edns_client_subnet"};
 			}
 		}
 
@@ -673,12 +684,13 @@ sub queryDOH($$$) {
 			"value" => $a{"data"},
 			"ttl" => $a{"TTL"},
 		);
-		if ($RESULTS{"results"}{$provider}{$type}{"rrs"}) {
-			push(@{$RESULTS{"results"}{$provider}{$type}{"rrs"}}, \%tuple);
+		if ($dohResults{"rrs"}) {
+			push(@{$dohResults{"rrs"}}, \%tuple);
 		} else {
-			@{$RESULTS{"results"}{$provider}{$type}{"rrs"}} = ( \%tuple );
+			@{$dohResults{"rrs"}} = ( \%tuple );
 		}
 	}
+	return \%dohResults;
 }
 
 
@@ -693,12 +705,13 @@ sub queryOneResolver($$$) {
 	$msg .= "...";
 
 	verbose($msg, 2);
-	$RESULTS{"query"} = $query;
-	$RESULTS{"type"} = \@{$OPTS{'types'}};
+	my %resolverResults;
 
 	foreach my $type (@{$OPTS{'types'}}) {
-		queryOneResolverForRR($r, $query, $type);
+		$resolverResults{$type} = queryOneResolverForRR($r, $query, $type);
 	}
+
+	return \%resolverResults;
 }
 
 sub queryOneResolverForRR($$$) {
@@ -706,9 +719,10 @@ sub queryOneResolverForRR($$$) {
 
 	verbose("Looking up RR $type...", 3);
 
+	my %result;
+
 	if ($OPTS{'doh'}) {
-		queryDOH($r, $query, $type);
-		return;
+		return queryDOH($r, $query, $type);
 	}
 
 	my ($res, $q);
@@ -727,11 +741,11 @@ sub queryOneResolverForRR($$$) {
 		alarm(0);
 	};
 	if ($@) {
-		$RESULTS{"results"}{$r}{$type}{"status"} = "timed out";
-		return
+		$result{"status"} = "timed out";
+		return \%result;
 	}
 
-	$RESULTS{"results"}{$r}{$type}{"status"} = $res->errorstring;
+	$result{"status"} = $res->errorstring;
 	if ($q) {
 		foreach my $rr ($q->answer) {
 			if ($rr->type ne $type) {
@@ -742,13 +756,14 @@ sub queryOneResolverForRR($$$) {
 				"value" => $rr->rdstring,
 				"ttl" => $rr->ttl,
 				);
-			if ($RESULTS{"results"}{$r}{$type}{"rrs"}) {
-				push(@{$RESULTS{"results"}{$r}{$type}{"rrs"}}, \%tuple);
+			if ($result{"rrs"}) {
+				push(@{$result{"rrs"}}, \%tuple);
 			} else {
-				@{$RESULTS{"results"}{$r}{$type}{"rrs"}} = ( \%tuple );
+				@{$result{"rrs"}} = ( \%tuple );
 			}
 		}
 	}
+	return \%result;
 }
 
 sub queryResolvers() {
@@ -758,8 +773,22 @@ sub queryResolvers() {
 	my %seen;
 	my @classes = ( "ipv6", "ipv4" );
 
+	my $query = $OPTS{'query'};
+
+	$RESULTS{"query"} = $query;
+	$RESULTS{"type"} = \@{$OPTS{'types'}};
+
+	my $pm = Parallel::ForkManager->new($CONCURRENCY);
+	$pm->run_on_finish(sub {
+				my (undef, undef, undef, undef, undef, $ref) = @_;
+				my @values = @{$ref};
+				$RESULTS{"results"}{$values[0]} = $values[1];
+			});
+
 	foreach my $c (@classes) {
+LOOP:
 		foreach my $r (keys(%{$RESOLVERS{$c}})) {
+			$pm->start() and next LOOP;
 			my $org = $RESOLVERS{$c}{$r};
 
 			if ($OPTS{'1'} && $seen{$org} && $org ne "command-line") {
@@ -768,8 +797,12 @@ sub queryResolvers() {
 			}
 
 			$seen{$org} = 1;
-			queryOneResolver($r, $org, $OPTS{'query'});
+			my $oneResult = queryOneResolver($r, $org, $query);
+			my @values = ($r, $oneResult);
+
+			$pm->finish(0, \@values);
 		}
+		$pm->wait_all_children();
 	}
 }
 

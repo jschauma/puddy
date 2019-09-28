@@ -21,6 +21,7 @@ and the following modules installed:
 * Net::DNS
 * Net::IP
 * Net::Netmask
+* Parallel::ForkManager
 
 ## Installation
 

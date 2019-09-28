@@ -1,0 +1,5 @@
+Version 1.1 (2019-09-28)
+* use Parallel:ForkManager to speed up queries
+
+Version 1.0 (2019-09-24)
+* Hello World!
