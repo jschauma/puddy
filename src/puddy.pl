@@ -608,7 +608,6 @@ sub queryDOH($$$) {
 	my %dohResults;
 
 	my $provider = $DOH{$url};
-	$dohResults{"comment"} = "$url";
 
 	verbose("Querying $provider for '$query' ($type) via DoH...", 4);
 	$url .= "name=" . uri_escape($query) . "&type=" . uri_escape($type);
@@ -709,6 +708,14 @@ sub queryOneResolver($$$) {
 
 	foreach my $type (@{$OPTS{'types'}}) {
 		$resolverResults{$type} = queryOneResolverForRR($r, $query, $type);
+		# We're cheating a bit here: ECS is returned for each type
+		# but we assume that the same ECS will be used for each.
+		# This isn't necessarily but at least apparently so,
+		# so for presentation purposes, this makes things a bit easier.
+		if ($resolverResults{$type}{"edns_client_subnet"}) {
+			$resolverResults{"edns_client_subnet"} = $resolverResults{$type}{"edns_client_subnet"};
+			delete($resolverResults{$type}{"edns_client_subnet"});
+		}
 	}
 
 	return \%resolverResults;
@@ -782,13 +789,19 @@ sub queryResolvers() {
 	$pm->run_on_finish(sub {
 				my (undef, undef, undef, undef, undef, $ref) = @_;
 				my @values = @{$ref};
-				$RESULTS{"results"}{$values[0]} = $values[1];
+				my $key = $values[0];
+				if ($OPTS{'doh'}) {
+					$key = $DOH{$key};
+				}
+				$RESULTS{"results"}{$key} = $values[1];
+				if ($OPTS{'doh'}) {
+					$RESULTS{"results"}{$key}{"comment"} = $values[0];
+				}
 			});
 
 	foreach my $c (@classes) {
 LOOP:
 		foreach my $r (keys(%{$RESOLVERS{$c}})) {
-			$pm->start() and next LOOP;
 			my $org = $RESOLVERS{$c}{$r};
 
 			if ($OPTS{'1'} && $seen{$org} && $org ne "command-line") {
@@ -797,8 +810,14 @@ LOOP:
 			}
 
 			$seen{$org} = 1;
-			my $oneResult = queryOneResolver($r, $org, $query);
-			my @values = ($r, $oneResult);
+
+			$pm->start() and next LOOP;
+			my $hr = queryOneResolver($r, $org, $query);
+			my %oneResult = %{$hr};
+			if ($OPTS{'doh'}) {
+				$oneResult{"comment"} = $query;
+			}
+			my @values = ($r, \%oneResult);
 
 			$pm->finish(0, \@values);
 		}
