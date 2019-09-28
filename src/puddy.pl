@@ -552,10 +552,10 @@ sub printResultsPlain() {
 				$n = 1;
 				next;
 			}
-			if ($oneResult{$k}{"status"} ne "NOERROR") {
+			if ($oneResult{$k}{"status"} && $oneResult{$k}{"status"} ne "NOERROR") {
 				$n = 1;
 				print "\t$k: " . $oneResult{$k}{"status"} . "\n";
-			} elsif (!$oneResult{$k}{"rrs"} && $OPTS{'wanted'}{$k}) {
+			} elsif (!($oneResult{$k}{"status"} && $oneResult{$k}{"rrs"}) && $OPTS{'wanted'}{$k}) {
 					# even if we didn't find data
 					# we still got a result, so set $n
 					$n = 1;
