@@ -1,3 +1,6 @@
+Version 1.2 (2019-11-19)
+* add '-e' to specify ECS explicitly
+
 Version 1.1 (2019-09-28)
 * use Parallel:ForkManager to speed up queries
 

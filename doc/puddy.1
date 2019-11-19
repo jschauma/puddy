@@ -1,4 +1,4 @@
-.Dd September 23, 2019
+.Dd November 19, 2019
 .Dt puddy 1
 .Os
 .Sh NAME
@@ -8,6 +8,7 @@
 .Nm
 .Op Fl 146Vdhjpv
 .Op Fl c Ar country
+.Op Fl e Ar cidr
 .Op Fl f Ar file
 .Op Fl n Ar num
 .Op Fl r Ar resolver
@@ -54,6 +55,9 @@ public resolvers and thus conflicts with e.g., the
 and
 .Fl p
 flags.
+.It Fl e Ar cidr
+Try to use the given CIDR via the EDNS Client Subnet
+(ECS) extension.
 .It Fl f Ar file
 Read the list of resolvers to query from this file.
 This option conflicts with the

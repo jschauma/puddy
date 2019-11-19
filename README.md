@@ -39,8 +39,8 @@ NAME
      puddy -- public DNS data yielder
 
 SYNOPSIS
-     puddy [-146Vdhjpv] [-c country] [-f file] [-n num] [-r resolver] query
-	   [type ...]
+     puddy [-146Vdhjpv] [-c country] [-e cidr] [-f file] [-n num]
+	   [-r resolver] query [type ...]
 
 DESCRIPTION
      The puddy tool allows you to query a number of different resolvers to
@@ -71,6 +71,9 @@ OPTIONS
      -d		  Use DNS-over-HTTPS.  This option only works with a subset of
 		  the known public resolvers and thus conflicts with e.g., the
 		  -f and -p flags.
+
+     -e cidr	  Try to use the given CIDR via the EDNS Client Subnet (ECS)
+		  extension.
 
      -f file	  Read the list of resolvers to query from this file.  This
 		  option conflicts with the -p flag.  See Section FILES for
@@ -329,8 +332,8 @@ SEE ALSO
      RFC7871
 
 HISTORY
-     puddy was originally written by Jan Schaumann <jschauma@netmeister.org> in
-     September 2019.
+     puddy was originally written by Jan Schaumann <jschauma@netmeister.org>
+     in September 2019.
 
 BUGS
      Please file bugs and feature requests by emailing the author.

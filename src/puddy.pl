@@ -49,7 +49,7 @@ use constant EXIT_SUCCESS => 0;
 use constant PUBLIC_URL => "https://public-dns.info/nameservers.txt";
 use constant CIPGR_URL => "http://services.ce3c.be/ciprg/";
 
-use constant VERSION => 1.1;
+use constant VERSION => 1.2;
 
 ###
 ### Globals
@@ -217,6 +217,7 @@ sub init() {
 			"version|V"	=> sub { print "$PROGNAME Version " . VERSION . "\n"; exit(EXIT_SUCCESS); },
 			"country|c=s"	=> \$OPTS{'country'},
 			"doh|d"		=> \$OPTS{'doh'},
+			"edns|e=s"	=> \$OPTS{'edns'},
 			"file|f=s"	=> \$OPTS{'file'},
 			"help|h"	=> \$OPTS{'h'},
 			"json|j"	=> \$OPTS{'json'},
@@ -267,6 +268,14 @@ sub init() {
 	if ($OPTS{'country'} && !$OPTS{'doh'}) {
 		error("'-c' can only be used in combination with '-d'.", EXIT_FAILURE);
 		# NOTREACHED
+	}
+
+	if ($OPTS{'edns'}) {
+	       	if (!$OPTS{'doh'}) {
+			error("'-e' can only be used in combination with '-d'.", EXIT_FAILURE);
+			# NOTREACHED
+		}
+		$EDNS_CLIENT_SUBNET = $OPTS{'edns'};
 	}
 
 	my $ulimit = `/bin/sh -c "ulimit -n"`;
@@ -612,7 +621,7 @@ sub queryDOH($$$) {
 	verbose("Querying $provider for '$query' ($type) via DoH...", 4);
 	$url .= "name=" . uri_escape($query) . "&type=" . uri_escape($type);
 
-	if ($OPTS{'country'} && $EDNS_CLIENT_SUBNET) {
+	if ( ($OPTS{'country'} || $OPTS{'edns'}) && $EDNS_CLIENT_SUBNET) {
 		$url .= "&edns_client_subnet=$EDNS_CLIENT_SUBNET";
 	}
 
@@ -846,13 +855,14 @@ sub usage($) {
 	my $FH = $err ? \*STDERR : \*STDOUT;
 
 	print $FH <<EOH
-Usage: $PROGNAME [-146Vdhjpv] [-c country] [-f file] [-n num] [-r resolver] query [type ...]
+Usage: $PROGNAME [-146Vdhjpv] [-c country] [-e cidr] [-f file] [-n num] [-r resolver] query [type ...]
 	-1           only use one resolver per organization
 	-4           only query IPv4 resolvers
 	-6           only query IPv6 resolvers
 	-V           print version number and exit
 	-c country   use edns_client_subnet to fake traffic from this country
 	-d           use DNS over HTTPS resolvers
+	-e cidr      use this cidr as edns_client_subnet
 	-f file      read list of resolvers from file
 	-h           print this help and exit
 	-j           print output in json format
