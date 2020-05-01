@@ -49,7 +49,7 @@ use constant EXIT_SUCCESS => 0;
 use constant PUBLIC_URL => "https://public-dns.info/nameservers.txt";
 use constant CIPGR_URL => "http://services.ce3c.be/ciprg/";
 
-use constant VERSION => 1.2;
+use constant VERSION => 1.3;
 
 ###
 ### Globals
@@ -71,9 +71,7 @@ my %DOH = (
 		"https://doh.li/dns-query?"		=> "doh.li",
 		"https://doh.dns.sb/dns-query?"		=> "DNS.SB",
 		"https://dns.google/resolve?"		=> "Google",
-		"https://doh.netweaver.uk/dns-query?"	=> "Netweaver",
 		"https://9.9.9.9:5053/dns-query?"	=> "Quad9",
-		"https://doh.securedns.eu/dns-query?"	=> "SecureDNS.eu",
 	  );
 
 my %RESOLVERS = (
@@ -642,21 +640,21 @@ sub queryDOH($$$) {
 						join(" ", @cmd) . "': $!", EXIT_FAILURE);
 	my $json = JSON->new->allow_nonref;
 	my $data = <$out>;
-	my $result;
-	eval {
-		$result = $json->decode($data);
-	};
-	if ($@) {
-		# E.g., Google DNS returns a 500 error on invalid query type.
-		$dohResults{"status"} = "Unable to query '$url'.";
-		return;
-
-	};
 	close($out);
 
+	my $result;
+	if ($data) {
+		eval { $result = $json->decode($data); };
+		if ($@) {
+			# E.g., Google DNS returns a 500 error on invalid query type.
+			$dohResults{"status"} = "Unable to query '$url'.";
+			return;
+		}
+	}
+
 	if (!$result) {
-		error("Unable to parse json from '$url'.", EXIT_FAILURE);
-		# NOTREACHED
+		$RESULTS{"results"}{$provider}{$type}{"status"} = "Unable to parse json from '$url'.";
+		return;
 	}
 
 	my @answers;

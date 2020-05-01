@@ -372,7 +372,7 @@ EOD
 sub printInstructions() {
 	print <<EOD
   <p>
-    <img src="puddy.gif" align="right" alt="David Puddy pointint to his 8-ball jacket" title="All signs point to yes.">
+    <img src="puddy.gif" align="right" alt="David Puddy pointing to his 8-ball jacket" title="All signs point to yes.">
 Sometimes it can be useful to check whether a given
 hostname or record resolves to the same value in
 different places on the internet, so you go and ask
