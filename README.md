@@ -98,7 +98,7 @@ DETAILS
      resolves to the same value in different places on the internet, so you go
      and ask the magic 8.8.8.8 ball.  But perhaps other resolvers elsewhere
      have different results?  Manually querying multiple resolvers is labor-
-     some, do instead puddy saves you some typing by performing these lookups
+     some, so instead puddy saves you some typing by performing these lookups
      in succession for you.
 
      By default, puddy will query resolvers for A, AAAA, and CNAME records,
@@ -115,10 +115,10 @@ PUBLIC RESOLVERS
      Many organizations offer public DNS services on multiple IP addresses; if
      the list of resolvers to use contains multiple IP address for the same
      organization, and you only want one of those servers, specify the -1
-     (numeric one) flag.  puddy will then pick only of the IPs for each orga-
-     nization from the input set.  Note: If an organization's resolvers are
-     reachable via both IPv4 and IPv6 addresses, then puddy will prefer the
-     IPv6 address.
+     (numeric one) flag.  puddy will then pick only one of the IPs for each
+     organization from the input set.  Note: If an organization's resolvers
+     are reachable via both IPv4 and IPv6 addresses, then puddy will prefer
+     the IPv6 address.
 
      If the -d flag is specified, puddy will query a short list of hardcoded
      public resolvers known to support DNS-over-HTTPS with results returned in
