@@ -49,7 +49,7 @@ use constant EXIT_SUCCESS => 0;
 use constant PUBLIC_URL => "https://public-dns.info/nameservers.txt";
 use constant CIPGR_URL => "http://services.ce3c.be/ciprg/";
 
-use constant VERSION => 1.3;
+use constant VERSION => 1.4;
 
 ###
 ### Globals
@@ -823,6 +823,9 @@ LOOP:
 			my %oneResult = %{$hr};
 			if ($OPTS{'doh'}) {
 				$oneResult{"comment"} = $query;
+			}
+			if (!$oneResult{"comment"}) {
+				$oneResult{"comment"} = $org;
 			}
 			my @values = ($r, \%oneResult);
 
