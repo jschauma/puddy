@@ -172,8 +172,8 @@ COUNTRY IMITATION
      queries using DNS over HTTPS (i.e., in combination with the -d option).
 
      When specified, puddy will try to look up a suitable netblock for the
-     given country via the site http://services.ce3c.be/ciprg/, then set the
-     ECS option.
+     given country via data from the site https://www.nirsoft.net/countryip/,
+     then set the ECS option.
 
      If you wish to disable the use of the ECS extension altogether, then you
      can pass 'none' as an argument to the -c flag, yielding a netblock of
