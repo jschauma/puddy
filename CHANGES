@@ -1,3 +1,6 @@
+Version 1.5 (2022-02-12)
+* switch cidr-by-country source
+
 Version 1.4 (2021-09-30)
 * ensure the org/comment is printed
 

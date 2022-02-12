@@ -16,7 +16,7 @@ use File::Basename;
 use Getopt::Long;
 use IO::Socket::INET6;
 use JSON;
-use Locale::Country qw(code2country);
+use Locale::Country qw(code2country country2code);
 use List::Util 'shuffle';
 use Net::DNS;
 use Net::DNS::Parameters qw(typebyval rcodebyval);
@@ -47,9 +47,9 @@ use constant EXIT_FAILURE => 1;
 use constant EXIT_SUCCESS => 0;
 
 use constant PUBLIC_URL => "https://public-dns.info/nameservers.txt";
-use constant CIPGR_URL => "http://services.ce3c.be/ciprg/";
+use constant COUNTRY_IP_URL => "https://www.nirsoft.net/countryip/";
 
-use constant VERSION => 1.4;
+use constant VERSION => 1.5;
 
 ###
 ### Globals
@@ -144,14 +144,8 @@ sub getCountryNetblocks() {
 		$c = "Russian Federation";
 	} elsif (($c eq "england") || ($c eq "uk")) {
 		$c = "united kingdom";
-	} elsif ($c eq "north korea") {
-		$c = "Korea Democratic People's Republic Of";
 	} elsif ($c eq "syria") {
 		$c = "syrian arab republic";
-	} elsif ($c eq "taiwan") {
-		$c = "TAIWAN; REPUBLIC OF CHINA (ROC)";
-	} elsif ($c eq "vietnam") {
-		$c = "viet nam";
 	}
 
 	if ($c eq "none") {
@@ -159,38 +153,60 @@ sub getCountryNetblocks() {
 		return
 	}
 
-	# We try to look up the CC; if that fails,
-	# let's pretend the arg is a country name
-	# and send it over to the service.
+	# We try to look up the CC; if that works,
+	# we're good.  Otherwise, try to convert the
+	# name into a CC.
+	my $cc = $c;
 	my $country = code2country($c);
 	if (!$country) {
-		$country = $c;
+		$cc = country2code($c);
 	}
-	verbose("Looking up netblocks allocated to $country...");
+	if (!$cc) {
+		error("Unable to get valid country code for '$c'.", EXIT_FAILURE);
+	}
 
-	my $query = "?format=shareaza&countrys=" . uri_escape($country);
-	my $url = CIPGR_URL . $query;
+	verbose("Looking up netblocks allocated to country code '$cc'...");
+	my $url = COUNTRY_IP_URL . uri_escape($cc) . ".html";
 	verbose("Fetching '$url'...", 2);
 
 	my @country_netblocks;
 	my @cmd = ( "curl", "-s", $url);
 	open(my $out, "-|", @cmd) or error("Unable to open pipe from '".
 						join(" ", @cmd) . "': $!", EXIT_FAILURE);
-	foreach my $line (<$out>) {
-		if ($line =~ m/.*address="(.*)" action.*mask="(.*)" comment="(.*)"/) {
-			my $ip = $1;
-			my $mask = $2;
-			my $country = $3;
-			my $block;
-			eval {
-				local $SIG{__WARN__} = sub {};
-				$block = Net::Netmask->new($ip, $mask);
-			};
-			if (!$block || $block->{'ERROR'}) {
-				next;
-			}
 
-			push(@country_netblocks, "".$block);
+	my $next = 0;
+	foreach my $line (<$out>) {
+		if ($line =~ m/tr class="iptableheader"/) {
+			$next = 1;
+			next;
+		}
+
+		if ($next) {
+			my @rows = split(/ <td>/, $line);
+			shift(@rows); # <tr>
+			my $n = 0;
+
+			my @pairs;
+			my ($start, $end);
+			foreach my $i (@rows) {
+				$n++;
+				if ($n == 1) {
+					$start = $i;
+				} elsif ($n == 2) {
+					$end = $i;
+					my @pair = ( $start, $end );
+					push(@pairs, \@pair);
+				} elsif ($n == 5) {
+					$n = 0;
+				}
+			}
+			foreach my $i (@pairs) {
+				my @pair = @{$i};
+				my @blocks = Net::Netmask::range2cidrlist($pair[0], $pair[1]);
+				foreach my $j (@blocks) {
+					push(@country_netblocks, "".$j);
+				}
+			}
 		}
 	}
 
