@@ -26,6 +26,11 @@
 8.20.247.20	Comodo Secure DNS
 8.26.56.26	Comodo Secure DNS
 
+193.110.81.0	dns0.eu
+185.253.5.0	dns0.eu
+2a0f:fc80::	dns0.eu
+2a0f:fc81::	dns0.eu
+
 2001:1608:10:25::1c04:b12f	DNS.Watch
 2001:1608:10:25::9249:d69b	DNS.Watch
 

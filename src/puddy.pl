@@ -49,7 +49,7 @@ use constant EXIT_SUCCESS => 0;
 use constant PUBLIC_URL => "https://public-dns.info/nameservers.txt";
 use constant COUNTRY_IP_URL => "https://www.nirsoft.net/countryip/";
 
-use constant VERSION => 1.5;
+use constant VERSION => 1.6;
 
 ###
 ### Globals
@@ -82,6 +82,8 @@ my %RESOLVERS = (
 				"8.8.8.8"		=> "Google",
 				"9.9.9.9"		=> "Quad9",
 				"74.82.42.42"		=> "Hurricane Electric",
+				"193.110.81.0"		=> "dns0.eu",
+				"185.253.5.0"		=> "dns0.eu",
 				"208.67.220.220"	=> "OpenDNS",
 				"208.67.222.222"	=> "OpenDNS",
 				},
@@ -94,6 +96,8 @@ my %RESOLVERS = (
 				"2620:0:ccc::2"		=> "OpenDNS",
 				"2620:0:ccd::2"		=> "OpenDNS",
 				"2620:fe::fe"		=> "Quad9",
+				"2a0f:fc80::"		=> "dns0.eu",
+				"2a0f:fc81::"		=> "dns0.eu",
 				},
 		);
 
