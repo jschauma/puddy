@@ -72,6 +72,7 @@ my %DOH = (
 		"https://doh.dns.sb/dns-query?"		=> "DNS.SB",
 		"https://dns.google/resolve?"		=> "Google",
 		"https://9.9.9.9:5053/dns-query?"	=> "Quad9",
+		"https://dns0.eu/dns-query?"		=> "dns0.eu",
 	  );
 
 my %RESOLVERS = (
@@ -656,6 +657,7 @@ sub queryDOH($$$) {
 			"-H", "Accept: application/dns-json",
 			"$url");
 
+	verbose("Running '" . join(" ", @cmd) . "'...", 5);
 	open(my $out, "-|", @cmd) or error("Unable to open pipe from '".
 						join(" ", @cmd) . "': $!", EXIT_FAILURE);
 	my $json = JSON->new->allow_nonref;
